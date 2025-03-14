@@ -1,0 +1,72 @@
+services:
+  app:
+    build:
+      context: ./docker/app
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    container_name: laravel_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./laravel:/var/www
+    networks:
+      - laravel_net
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+
+  webserver:
+    image: nginx:latest
+    container_name: laravel_nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT}:80"
+    volumes:
+      - ./laravel:/var/www
+      - ./.env:/var/www/.env
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - laravel_net
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8
+    container_name: laravel_db
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT}:3306"
+    environment:
+      #MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - laravel_net
+
+  node:
+    image: node:latest
+    container_name: laravel_node
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./laravel:/var/www
+    networks:
+      - laravel_net
+    ports:
+      - "${VITE_HMR_PORT}:5173"
+    command: ["bash", "-c", "tail -f /dev/null"]
+
+networks:
+  laravel_net:
+
+volumes:
+  db_data:
