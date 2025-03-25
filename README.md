@@ -60,9 +60,11 @@ docker-compose exec app bash -c "php artisan migrate --seed"
 ```sh
 docker-compose exec node bash -c "rm -rf node_modules"
 ```
-Install Node Modules:
+Install, update and build Node Modules (change to current version):
 ```sh
-docker-compose exec node bash -c "npm install"
+docker-compose exec node bash -c "npm install -g npm@11.2.0"
+docker-compose exec node bash -c "npm update"
+docker-compose exec node bash -c "npm run build"
 ```
 
 ## Step 6: Restart the Containers
